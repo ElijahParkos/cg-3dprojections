@@ -8,6 +8,16 @@ function mat4x4Perspective(prp, srp, vup, clip) {
     // 4. scale such that view volume bounds are ([z,-z], [z,-z], [-1,zmin])
 
     // ...
+    let translate = new Matrix(4,4);
+    translate.values = [
+        [1, 0, 0, -prp.x],
+        [0, 1, 0, -prp.y],
+        [0, 0, 1, -prp.z],
+        [0, 0, 0, 1]
+    ]
+
+    let rotate = new Matrix(4,4)
+    
     // let transform = Matrix.multiply([...]);
     // return transform;
 }
@@ -15,14 +25,24 @@ function mat4x4Perspective(prp, srp, vup, clip) {
 // create a 4x4 matrix to project a perspective image on the z=-1 plane
 function mat4x4MPer() {
     let mper = new Matrix(4, 4);
-    // mper.values = ...;
+    mper.values = [
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, -1, 0]
+    ]
     return mper;
 }
 
 // create a 4x4 matrix to translate/scale projected vertices to the viewport (window)
 function mat4x4Viewport(width, height) {
     let viewport = new Matrix(4, 4);
-    // viewport.values = ...;
+    viewport.values = [
+        [width/2, 0, 0, width/2],
+        [0, height/2, 0, height/2],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1]
+    ]
     return viewport;
 }
 
