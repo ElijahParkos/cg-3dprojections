@@ -60,8 +60,41 @@ class Renderer {
 
     //
     draw() {
+        const models = this.scene.models;
+        const view = this.scene.view;
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        const translateViewport = CG.mat4x4Viewport(this.canvas.width, this.canvas.height);
+        for(const model of models) {
+            model.cannonical_vertices = [];
+            const transform = CG.mat4x4Perspective(view.prp, view.srp, view.vup, view.clip);
+            for(const vertex of model.vertices) {
+                model.cannonical_vertices.push(Matrix.multiply([transform, vertex]));
+            }
+            for(const edge of model.edges) {
+                for(let i = 0; i<edge.length; i++) {
+                    const pt0 = model.cannonical_vertices[edge[i]];
+                    const pt1 = model.cannonical_vertices[edge[(i+1)%edge.length]];
 
+                    // clip in 3D
+
+                    // project to 2D
+
+                    // translate/scale to viewport
+                    const viewport_pt0 = Matrix.multiply([translateViewport, pt0]);
+                    const viewport_pt1 = Matrix.multiply([translateViewport, pt1]);
+
+                    //divide by w?
+                    
+                    //draw line
+                    this.drawLine(viewport_pt0.x, viewport_pt0.y, viewport_pt1.x, viewport_pt1.y);
+                    //console.log(pt0.x, pt1.x);
+                }
+            }
+
+             //console.log(model.cannonical_vertices);
+        }
+
+       
         // TODO: implement drawing here!
         // For each model
         //   * For each vertex
@@ -105,8 +138,8 @@ class Renderer {
     // z_min:        float (near clipping plane in canonical view volume)
     clipLinePerspective(line, z_min) {
         let result = null;
-        let p0 = Vector3(line.pt0.x, line.pt0.y, line.pt0.z); 
-        let p1 = Vector3(line.pt1.x, line.pt1.y, line.pt1.z);
+        let p0 = CG.Vector3(line.pt0.x, line.pt0.y, line.pt0.z); 
+        let p1 = CG.Vector3(line.pt1.x, line.pt1.y, line.pt1.z);
         let out0 = this.outcodePerspective(p0, z_min);
         let out1 = this.outcodePerspective(p1, z_min);
         

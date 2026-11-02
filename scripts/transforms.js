@@ -2,24 +2,52 @@ import { Matrix, Vector } from "./matrix.js";
 
 // create a 4x4 matrix to the perspective projection / view matrix
 function mat4x4Perspective(prp, srp, vup, clip) {
+    const left = clip[0];
+    const right = clip[1];
+    const bottom = clip[2];
+    const top = clip[3];
+    const near = clip[4];
+    const far = clip[5];
     // 1. translate PRP to origin
     // 2. rotate VRC such that (u,v,n) align with (x,y,z)
     // 3. shear such that CW is on the z-axis
     // 4. scale such that view volume bounds are ([z,-z], [z,-z], [-1,zmin])
 
-    // ...
     let translate = new Matrix(4,4);
-    translate.values = [
-        [1, 0, 0, -prp.x],
-        [0, 1, 0, -prp.y],
-        [0, 0, 1, -prp.z],
+    mat4x4Translate(translate, -prp.x, -prp.y, -prp.z);
+
+    let n = prp.subtract(srp);
+    n.normalize();
+    let u = vup.cross(n);
+    u.normalize();
+    let v = n.cross(u);
+
+    let rotate = new Matrix(4,4);
+    rotate.values = [
+        [u.x, u.y, u.z, 0],
+        [v.x, v.y, v.z, 0],
+        [n.x, n.y, n.z, 0],
         [0, 0, 0, 1]
     ]
 
-    let rotate = new Matrix(4,4)
+    let cw = Vector3((left+right)/2, (bottom+top)/2, -near);
+    // Do we even need to subtract here? CW - PRP (which is [0,0,0]) = the same values
+
+    let shx = -cw.x/cw.z;
+    let shy = -cw.y/cw.z; 
+
+    let shear = new Matrix(4,4);
+    mat4x4ShearXY(shear, shx, shy);
+
+    let sx = (2*near)/((right-left)*far);
+    let sy = (2*near)/((top-bottom)*far);
+    let sz = 1/far;
+
+    let scale = new Matrix(4,4);
+    mat4x4Scale(scale, sx, sy, sz);
     
-    // let transform = Matrix.multiply([...]);
-    // return transform;
+    let transform = Matrix.multiply([scale, shear, rotate, translate]);
+    return transform;
 }
 
 // create a 4x4 matrix to project a perspective image on the z=-1 plane
@@ -104,7 +132,6 @@ function mat4x4RotateZ(mat4x4, theta) {
 
 // set values of existing 4x4 matrix to the shear parallel to the xy-plane matrix
 function mat4x4ShearXY(mat4x4, shx, shy) {
-    radians = degToRad(theta);
     mat4x4.values = [[1, 0, shx, 0],
                      [0, 1, shy, 0],
                      [0, 0, 1, 0],
