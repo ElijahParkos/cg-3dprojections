@@ -62,6 +62,8 @@ class Renderer {
     draw() {
         const models = this.scene.models;
         const view = this.scene.view;
+        const z_min = -view.clip[4] / view.clip[5];
+        const mper = CG.mat4x4MPer();
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         const translateViewport = CG.mat4x4Viewport(this.canvas.width, this.canvas.height);
         for(const model of models) {
@@ -74,20 +76,19 @@ class Renderer {
                 for(let i = 0; i<edge.length; i++) {
                     const pt0 = model.cannonical_vertices[edge[i]];
                     const pt1 = model.cannonical_vertices[edge[(i+1)%edge.length]];
-
                     // clip in 3D
-
+                    const line = this.clipLinePerspective({pt0: pt0, pt1: pt1}, z_min);
+                    if (line === null) continue; //outside of clipping, don't draw line
                     // project to 2D
 
                     // translate/scale to viewport
-                    const viewport_pt0 = Matrix.multiply([translateViewport, pt0]);
-                    const viewport_pt1 = Matrix.multiply([translateViewport, pt1]);
-
-                    //divide by w?
+                    const a = Matrix.multiply([translateViewport, mper,
+                        CG.Vector4(line.pt0.x, line.pt0.y, line.pt0.z, 1)]);
+                    const b = Matrix.multiply([translateViewport, mper,
+                        CG.Vector4(line.pt1.x, line.pt1.y, line.pt1.z, 1)]);
                     
                     //draw line
-                    this.drawLine(viewport_pt0.x, viewport_pt0.y, viewport_pt1.x, viewport_pt1.y);
-                    //console.log(pt0.x, pt1.x);
+                    this.drawLine(a.x / a.w, a.y / a.w, b.x / b.w, b.y / b.w);
                 }
             }
 
@@ -137,17 +138,84 @@ class Renderer {
     // line:         object {pt0: Vector4, pt1: Vector4}
     // z_min:        float (near clipping plane in canonical view volume)
     clipLinePerspective(line, z_min) {
-        let result = null;
         let p0 = CG.Vector3(line.pt0.x, line.pt0.y, line.pt0.z); 
         let p1 = CG.Vector3(line.pt1.x, line.pt1.y, line.pt1.z);
         let out0 = this.outcodePerspective(p0, z_min);
         let out1 = this.outcodePerspective(p1, z_min);
-        
-        // TODO: implement clipping here!
-        
-        return result;
-    }
+        console.log(out0, out1);
+        let dx = p1.x - p0.x;
+        let dy = p1.y - p0.y;
+        let dz = p1.z - p0.z;
+        while (true) {
+            if ((out0 | out1) == 0){
+                console.log({pt0: p0, pt1: p1})
+                return {pt0: p0, pt1: p1} //trivial accept
+            }
+            if ((out0 & out1) != 0) {
+                return null; //trivial reject
+            }
 
+            let outcodeOut = out0 != 0 ? out0 : out1;
+
+
+            if  ((outcodeOut & LEFT)   != 0) {
+                if (out0 != 0) {
+                    let t = (p0.z - p0.x) / (dx - dz);
+                    out0 = this.updatePoint(p0, t, dx, dy, dz, z_min);
+            } else{
+                    let t = (p1.z - p1.x) / (dx - dz);
+                    out1 = this.updatePoint(p1, t, dx, dy, dz, z_min);
+            } }
+            else if ((outcodeOut & RIGHT)  != 0) { 
+                if (out0 != 0) {
+                    let t = (p0.z + p0.x) / (-dx - dz);
+                    out0 = this.updatePoint(p0, t, dx, dy, dz, z_min);
+            } else{
+                    let t = (p1.z + p1.x) / (-dx - dz);
+                    out1 = this.updatePoint(p1, t, dx, dy, dz, z_min);
+            } }
+            else if ((outcodeOut & BOTTOM) != 0) { 
+                if (out0 != 0) {
+                    let t = (p0.z - p0.y) / (dy - dz);
+                    out0 = this.updatePoint(p0, t, dx, dy, dz, z_min);
+            } else {
+                    let t = (p1.z - p1.y) / (dy - dz);
+                    out1 = this.updatePoint(p1, t, dx, dy, dz, z_min);
+            } }
+            else if ((outcodeOut & TOP)    != 0) { 
+                if (out0 != 0) {
+                    let t = (p0.z + p0.y) / (-dy - dz);
+                    out0 = this.updatePoint(p0, t, dx, dy, dz, z_min);
+            } else {
+                    let t = (p1.z + p1.y) / (-dy - dz);
+                    out1 = this.updatePoint(p1, t, dx, dy, dz, z_min);
+            } }
+            else if ((outcodeOut & FAR)    != 0) { 
+                if (out0 != 0) {
+                    let t = (-p0.z - 1) / dz;
+                    out0 = this.updatePoint(p0, t, dx, dy, dz, z_min);
+            } else {
+                    let t = (-p1.z - 1) / dz;
+                    out1 = this.updatePoint(p1, t, dx, dy, dz, z_min);
+            } }
+            else if ((outcodeOut & NEAR)   != 0) { 
+                if (out0 != 0) {
+                    let t = (p0.z - z_min) / -dz;
+                    out0 = this.updatePoint(p0, t, dx, dy, dz, z_min);
+            } else {
+                    let t = (p1.z - z_min) / -dz;
+                    out1 = this.updatePoint(p1, t, dx, dy, dz, z_min);
+            } }
+
+        }
+    }
+    // Update a point along a line segment and return its new outcode
+    updatePoint(p0, t, dx, dy, dz, z_min){
+        p0.x += t * dx;
+        p0.y += t * dy;
+        p0.z += t * dz;
+        return this.outcodePerspective(p0, z_min);
+    }
     //
     animate(timestamp) {
         // Get time and delta time for animation

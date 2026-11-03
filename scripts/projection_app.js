@@ -50,6 +50,8 @@ let app = createApp({
     }
 }).mount('#content');
 
+let S = 20; 
+
 let initial_scene = {
     view: {
         prp: [44, 20, -16],
@@ -71,7 +73,7 @@ let initial_scene = {
                 [20.0, 12.0, -60.0],
                 [10.0, 20.0, -60.0],
                 [ 0.0, 12.0, -60.0]
-            ],
+            ].map(v => [v[0], v[1], v[2] + S]),
             edges: [
                 [0, 1, 2, 3, 4, 0],
                 [5, 6, 7, 8, 9, 5],
