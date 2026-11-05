@@ -133,7 +133,6 @@ class Renderer {
                     let vertex2 = CG.Vector4(x, y + model.height, z, 1);
                     model.cannonical_vertices.push(Matrix.multiply([transform, vertex2])); //top circle
                 }
-                console.log(model.edges);
                 for (let i = 0; i < model.sides; i++) {
                     edges.push([i * 2, (i * 2 + 2) % (model.sides * 2)]); // bottom circle
                     edges.push([i * 2 + 1, (i * 2 + 3) % (model.sides * 2)]); // top circle
@@ -141,7 +140,30 @@ class Renderer {
                 }
             }    
             // TODO : Implement Sphere
-
+            if (model.type === 'sphere') {
+                let slices = model.slices;
+                let stacks = model.stacks;
+                for (let i = 0; i <= stacks; i++) {
+                    let phi = (i / stacks) * Math.PI;
+                    for (let j = 0; j <= slices; j++) {
+                        let theta = (j / slices) * 2 * Math.PI;
+                        let x = model.center.x + model.radius * Math.sin(phi) * Math.cos(theta);
+                        let y = model.center.y + model.radius * Math.cos(phi);
+                        let z = model.center.z + model.radius * Math.sin(phi) * Math.sin(theta);
+                        let vertex = CG.Vector4(x, y, z, 1);
+                        model.cannonical_vertices.push(Matrix.multiply([transform, vertex]));
+                    }
+                }
+                for (let i = 0; i < stacks; i++) {
+                    for (let j = 0; j < slices; j++) {
+                        let first = i * (slices + 1) + j;
+                        let second = first + slices + 1;
+                        edges.push([first, second]);
+                        edges.push([first, first + 1]);
+                        edges.push([second, second + 1]);
+                    }
+                }
+            }
             for(const edge of edges) {
                 for(let i = 0; i<edge.length; i++) {
                     const pt0 = model.cannonical_vertices[edge[i]];

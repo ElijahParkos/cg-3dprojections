@@ -62,24 +62,31 @@ let initial_scene = {
     models: [
         {
             type: "cube",
-            center: [4, 4, -30],
+            center: [10, 25, -14],
             width: 8,
             height: 8,
             depth: 8
         },
         {
             type: "cone",
-            center: [4, 4, -60],
+            center: [20, 4, -60],
             radius: 4,
             height: 8,
             sides: 20
         },
         {
             type: "cylinder",
-            center: [12, 10, -20],
+            center: [20, 30, -20],
             radius: 1.5,
             height: 5,
             sides: 12
+        },
+        {
+            type: "sphere",
+            center: [12, 30, -40],
+            radius: 8,
+            slices: 12,
+            stacks: 12
         },
         {
             type: 'generic',
