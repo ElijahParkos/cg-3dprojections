@@ -155,12 +155,104 @@ class Renderer {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         const translateViewport = CG.mat4x4Viewport(this.canvas.width, this.canvas.height);
         for(const model of models) {
+            let edges = [];
             model.cannonical_vertices = [];
             const transform = CG.mat4x4Perspective(view.prp, view.srp, view.vup, view.clip);
-            for(const vertex of model.vertices) {
-                model.cannonical_vertices.push(Matrix.multiply([transform, vertex]));
+            if (model.type === 'generic') {
+                for(const vertex of model.vertices) {
+                    model.cannonical_vertices.push(Matrix.multiply([transform, vertex]));
+                }
+                edges = model.edges;
             }
-            for(const edge of model.edges) {
+            if  (model.type === 'cube') {
+                const half_length = model.depth / 2;
+                const half_width = model.width / 2;
+                const half_height = model.height / 2;
+                const vertices = [
+                    CG.Vector4(model.center.x - half_length, model.center.y - half_width, model.center.z - half_height, 1),
+                    CG.Vector4(model.center.x + half_length, model.center.y - half_width, model.center.z - half_height, 1),
+                    CG.Vector4(model.center.x - half_length, model.center.y + half_width, model.center.z - half_height, 1),
+                    CG.Vector4(model.center.x + half_length, model.center.y + half_width, model.center.z - half_height, 1),
+                    CG.Vector4(model.center.x - half_length, model.center.y - half_width, model.center.z + half_height, 1),
+                    CG.Vector4(model.center.x + half_length, model.center.y - half_width, model.center.z + half_height, 1),
+                    CG.Vector4(model.center.x - half_length, model.center.y + half_width, model.center.z + half_height, 1),
+                    CG.Vector4(model.center.x + half_length, model.center.y + half_width, model.center.z + half_height, 1)
+                ]; 
+                for(const vertex of vertices) {
+                    model.cannonical_vertices.push(Matrix.multiply([transform, vertex]));
+                }
+                edges = [
+                    [0, 2, 3, 1, 0], 
+                    [4, 6, 7, 5, 4], 
+                    [0, 4],
+                    [1, 5],
+                    [2, 6],
+                    [3, 7]
+                ];
+            }
+            if (model.type === 'cone') {
+                let angel_degrees = 360 / model.sides;
+                let angel_radians = angel_degrees * (Math.PI / 180);
+                for (let i = 0; i < model.sides; i++) {
+
+                    // whichever way you want the cone pointed set that value to the center and then the other two values to the radius times cos/sin of the angle
+                    let x = model.center.x + model.radius * Math.cos(i * angel_radians); 
+                    let y = model.center.y;
+                    let z = model.center.z + model.radius * Math.sin(i * angel_radians);
+                    let vertex = CG.Vector4(x, y, z, 1);
+                    model.cannonical_vertices.push(Matrix.multiply([transform, vertex]));
+                }
+                let apex = CG.Vector4(model.center.x, model.center.y + model.height, model.center.z, 1); // add height to whichever is the apex
+                model.cannonical_vertices.push(Matrix.multiply([transform, apex]));
+                for (let i = 0; i < model.sides; i++) {
+                    edges.push([i, (i + 1) % model.sides]); // bottom circle
+                    edges.push([i, model.sides]); // lines from base to apex (apex lives at index model.sides)
+                }
+            }
+            if (model.type === 'cylinder') {
+                let angel_degrees = 360 / model.sides;
+                let angel_radians = angel_degrees * (Math.PI / 180);
+                for (let i = 0; i < model.sides; i++) {
+                    let x = model.center.x + model.radius * Math.cos(i * angel_radians);
+                    let y = model.center.y - model.height / 2;
+                    let z = model.center.z + model.radius * Math.sin(i * angel_radians);
+                    let vertex = CG.Vector4(x, y, z, 1);
+                    model.cannonical_vertices.push(Matrix.multiply([transform, vertex])); // bottom circle
+                    let vertex2 = CG.Vector4(x, y + model.height, z, 1);
+                    model.cannonical_vertices.push(Matrix.multiply([transform, vertex2])); //top circle
+                }
+                for (let i = 0; i < model.sides; i++) {
+                    edges.push([i * 2, (i * 2 + 2) % (model.sides * 2)]); // bottom circle
+                    edges.push([i * 2 + 1, (i * 2 + 3) % (model.sides * 2)]); // top circle
+                    edges.push([i * 2, i * 2 + 1]); // vertical lines
+                }
+            }    
+            // TODO : Implement Sphere
+            if (model.type === 'sphere') {
+                let slices = model.slices;
+                let stacks = model.stacks;
+                for (let i = 0; i <= stacks; i++) {
+                    let phi = (i / stacks) * Math.PI;
+                    for (let j = 0; j <= slices; j++) {
+                        let theta = (j / slices) * 2 * Math.PI;
+                        let x = model.center.x + model.radius * Math.sin(phi) * Math.cos(theta);
+                        let y = model.center.y + model.radius * Math.cos(phi);
+                        let z = model.center.z + model.radius * Math.sin(phi) * Math.sin(theta);
+                        let vertex = CG.Vector4(x, y, z, 1);
+                        model.cannonical_vertices.push(Matrix.multiply([transform, vertex]));
+                    }
+                }
+                for (let i = 0; i < stacks; i++) {
+                    for (let j = 0; j < slices; j++) {
+                        let first = i * (slices + 1) + j;
+                        let second = first + slices + 1;
+                        edges.push([first, second]);
+                        edges.push([first, first + 1]);
+                        edges.push([second, second + 1]);
+                    }
+                }
+            }
+            for(const edge of edges) {
                 for(let i = 0; i<edge.length; i++) {
                     const pt0 = model.cannonical_vertices[edge[i]];
                     const pt1 = model.cannonical_vertices[edge[(i+1)%edge.length]];
