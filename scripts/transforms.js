@@ -105,7 +105,7 @@ function mat4x4Scale(mat4x4, sx, sy, sz) {
 
 // set values of existing 4x4 matrix to the rotate about x-axis matrix
 function mat4x4RotateX(mat4x4, theta) {
-    radians = degToRad(theta);
+    let radians = degToRad(theta);
     mat4x4.values = [[1, 0, 0, 0],
                      [0, Math.cos(radians), -Math.sin(radians), 0],
                      [0, Math.sin(radians), Math.cos(radians), 0],
@@ -114,7 +114,7 @@ function mat4x4RotateX(mat4x4, theta) {
 
 // set values of existing 4x4 matrix to the rotate about y-axis matrix
 function mat4x4RotateY(mat4x4, theta) {
-    radians = degToRad(theta);
+    let radians = degToRad(theta);
     mat4x4.values = [[Math.cos(radians), 0, Math.sin(radians), 0],
                      [0, 1, 0, 0],
                      [-Math.sin(radians), 0, Math.cos(radians), 0],
@@ -123,7 +123,7 @@ function mat4x4RotateY(mat4x4, theta) {
 
 // set values of existing 4x4 matrix to the rotate about z-axis matrix
 function mat4x4RotateZ(mat4x4, theta) {
-    radians = degToRad(theta);
+    let radians = degToRad(theta);
     mat4x4.values = [[Math.cos(radians), -Math.sin(radians), 0, 0],
                      [Math.sin(radians), Math.cos(radians), 0, 0],
                      [0, 0, 1, 0],

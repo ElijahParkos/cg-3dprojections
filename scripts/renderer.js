@@ -18,7 +18,7 @@ class Renderer {
         this.canvas.height = canvas.height;
         this.ctx = this.canvas.getContext('2d');
         this.scene = this.processScene(scene);
-        this.enable_animation = false;  // <-- disabled for easier debugging; enable for animation
+        this.enable_animation = true;  // <-- disabled for easier debugging; enable for animation
         this.start_time = null;
         this.prev_time = null;
     }
@@ -30,32 +30,120 @@ class Renderer {
 
     //
     rotateLeft() {
+        let theta = 5;
 
+        let view = this.scene.view;
+        let n = view.prp.subtract(view.srp);
+        n.normalize();
+        let u = view.vup.cross(n);
+        u.normalize();
+        let v = n.cross(u);
+
+        let temp_srp = CG.Vector4(view.srp.x, view.srp.y, view.srp.z, 1);
+
+        let translateOrigin = new Matrix(4,4);
+        CG.mat4x4Translate(translateOrigin, -view.prp.x, -view.prp.y, -view.prp.z);
+
+        let rotateOrigin = new Matrix(4,4);
+        rotateOrigin.values = [
+        [u.x, u.y, u.z, 0],
+        [v.x, v.y, v.z, 0],
+        [n.x, n.y, n.z, 0],
+        [0, 0, 0, 1]];
+        
+        let rotation = new Matrix(4,4);
+        CG.mat4x4RotateY(rotation, theta);
+
+        let rotateBack = rotateOrigin.transpose();
+
+        let translateBack = new Matrix(4,4);
+        CG.mat4x4Translate(translateBack, view.prp.x, view.prp.y, view.prp.z);
+
+        temp_srp = Matrix.multiply([translateBack, rotateBack, rotation, rotateOrigin, translateOrigin, temp_srp]);
+        
+        view.srp = CG.Vector3(temp_srp.x, temp_srp.y, temp_srp.z);
+        if(!this.enable_animation) this.draw();
     }
     
     //
     rotateRight() {
+        let theta = -5;
 
+        let view = this.scene.view;
+        let n = view.prp.subtract(view.srp);
+        n.normalize();
+        let u = view.vup.cross(n);
+        u.normalize();
+        let v = n.cross(u);
+
+        let temp_srp = CG.Vector4(view.srp.x, view.srp.y, view.srp.z, 1);
+
+        let translateOrigin = new Matrix(4,4);
+        CG.mat4x4Translate(translateOrigin, -view.prp.x, -view.prp.y, -view.prp.z);
+
+        let rotateOrigin = new Matrix(4,4);
+        rotateOrigin.values = [
+        [u.x, u.y, u.z, 0],
+        [v.x, v.y, v.z, 0],
+        [n.x, n.y, n.z, 0],
+        [0, 0, 0, 1]];
+        
+        let rotation = new Matrix(4,4);
+        CG.mat4x4RotateY(rotation, theta);
+
+        let rotateBack = rotateOrigin.transpose();
+
+        let translateBack = new Matrix(4,4);
+        CG.mat4x4Translate(translateBack, view.prp.x, view.prp.y, view.prp.z);
+
+        temp_srp = Matrix.multiply([translateBack, rotateBack, rotation, rotateOrigin, translateOrigin, temp_srp]);
+        
+        view.srp = CG.Vector3(temp_srp.x, temp_srp.y, temp_srp.z);
+        if(!this.enable_animation) this.draw();
     }
     
     //
     moveLeft() {
-
+        let view = this.scene.view;
+        let n = view.prp.subtract(view.srp);
+        n.normalize();
+        let u = view.vup.cross(n);
+        u.normalize();
+        view.prp = view.prp.subtract(u);
+        view.srp = view.srp.subtract(u);
+        if(!this.enable_animation) this.draw();
     }
     
     //
     moveRight() {
-
+        let view = this.scene.view;
+        let n = view.prp.subtract(view.srp);
+        n.normalize();
+        let u = view.vup.cross(n);
+        u.normalize();
+        view.prp = view.prp.add(u);
+        view.srp = view.srp.add(u);
+        if(!this.enable_animation) this.draw();
     }
     
     //
     moveBackward() {
-
+        let view = this.scene.view;
+        let n = view.prp.subtract(view.srp);
+        n.normalize();
+        view.prp = view.prp.add(n);
+        view.srp = view.srp.add(n);
+        if(!this.enable_animation) this.draw();
     }
     
     //
     moveForward() {
-
+        let view = this.scene.view;
+        let n = view.prp.subtract(view.srp);
+        n.normalize();
+        view.prp = view.prp.subtract(n);
+        view.srp = view.srp.subtract(n);
+        if(!this.enable_animation) this.draw();
     }
 
     //
@@ -79,9 +167,8 @@ class Renderer {
                     // clip in 3D
                     const line = this.clipLinePerspective({pt0: pt0, pt1: pt1}, z_min);
                     if (line === null) continue; //outside of clipping, don't draw line
-                    // project to 2D
 
-                    // translate/scale to viewport
+                    // project to 2D and translate/scale to viewport
                     const a = Matrix.multiply([translateViewport, mper,
                         CG.Vector4(line.pt0.x, line.pt0.y, line.pt0.z, 1)]);
                     const b = Matrix.multiply([translateViewport, mper,
@@ -92,7 +179,6 @@ class Renderer {
                 }
             }
 
-             //console.log(model.cannonical_vertices);
         }
 
        
@@ -140,75 +226,39 @@ class Renderer {
     clipLinePerspective(line, z_min) {
         let p0 = CG.Vector3(line.pt0.x, line.pt0.y, line.pt0.z); 
         let p1 = CG.Vector3(line.pt1.x, line.pt1.y, line.pt1.z);
-        let out0 = this.outcodePerspective(p0, z_min);
-        let out1 = this.outcodePerspective(p1, z_min);
-        console.log(out0, out1);
+        let out0 = {value: this.outcodePerspective(p0, z_min)};
+        let out1 = {value: this.outcodePerspective(p1, z_min)};
         let dx = p1.x - p0.x;
         let dy = p1.y - p0.y;
         let dz = p1.z - p0.z;
         while (true) {
-            if ((out0 | out1) == 0){
-                console.log({pt0: p0, pt1: p1})
+            if ((out0.value | out1.value) === 0){
                 return {pt0: p0, pt1: p1} //trivial accept
             }
-            if ((out0 & out1) != 0) {
+            if (out0.value & out1.value) {
                 return null; //trivial reject
             }
 
-            let outcodeOut = out0 != 0 ? out0 : out1;
+            let outcodeOut = out0;
+            let pointOut = p0;
+            if(outcodeOut.value === 0) {
+                outcodeOut = out1;
+                pointOut = p1;
+            }
 
-
-            if  ((outcodeOut & LEFT)   != 0) {
-                if (out0 != 0) {
-                    let t = (p0.z - p0.x) / (dx - dz);
-                    out0 = this.updatePoint(p0, t, dx, dy, dz, z_min);
-            } else{
-                    let t = (p1.z - p1.x) / (dx - dz);
-                    out1 = this.updatePoint(p1, t, dx, dy, dz, z_min);
-            } }
-            else if ((outcodeOut & RIGHT)  != 0) { 
-                if (out0 != 0) {
-                    let t = (p0.z + p0.x) / (-dx - dz);
-                    out0 = this.updatePoint(p0, t, dx, dy, dz, z_min);
-            } else{
-                    let t = (p1.z + p1.x) / (-dx - dz);
-                    out1 = this.updatePoint(p1, t, dx, dy, dz, z_min);
-            } }
-            else if ((outcodeOut & BOTTOM) != 0) { 
-                if (out0 != 0) {
-                    let t = (p0.z - p0.y) / (dy - dz);
-                    out0 = this.updatePoint(p0, t, dx, dy, dz, z_min);
-            } else {
-                    let t = (p1.z - p1.y) / (dy - dz);
-                    out1 = this.updatePoint(p1, t, dx, dy, dz, z_min);
-            } }
-            else if ((outcodeOut & TOP)    != 0) { 
-                if (out0 != 0) {
-                    let t = (p0.z + p0.y) / (-dy - dz);
-                    out0 = this.updatePoint(p0, t, dx, dy, dz, z_min);
-            } else {
-                    let t = (p1.z + p1.y) / (-dy - dz);
-                    out1 = this.updatePoint(p1, t, dx, dy, dz, z_min);
-            } }
-            else if ((outcodeOut & FAR)    != 0) { 
-                if (out0 != 0) {
-                    let t = (-p0.z - 1) / dz;
-                    out0 = this.updatePoint(p0, t, dx, dy, dz, z_min);
-            } else {
-                    let t = (-p1.z - 1) / dz;
-                    out1 = this.updatePoint(p1, t, dx, dy, dz, z_min);
-            } }
-            else if ((outcodeOut & NEAR)   != 0) { 
-                if (out0 != 0) {
-                    let t = (p0.z - z_min) / -dz;
-                    out0 = this.updatePoint(p0, t, dx, dy, dz, z_min);
-            } else {
-                    let t = (p1.z - z_min) / -dz;
-                    out1 = this.updatePoint(p1, t, dx, dy, dz, z_min);
-            } }
-
+            let t = null;
+            if(outcodeOut.value & LEFT) t = (pointOut.z - pointOut.x) / (dx - dz); 
+            else if(outcodeOut.value & RIGHT) t = (pointOut.z + pointOut.x) / (-dx - dz);
+            else if(outcodeOut.value & BOTTOM) t = (pointOut.z - pointOut.y) / (dy - dz);
+            else if(outcodeOut.value & TOP) t = (pointOut.z + pointOut.y) / (-dy - dz);
+            else if(outcodeOut.value & FAR) t = (-pointOut.z - 1) / dz;
+            else if(outcodeOut.value & NEAR) t = (pointOut.z - z_min) / -dz;
+            
+            if(t === null) continue;
+            outcodeOut.value = this.updatePoint(pointOut, t, dx, dy, dz, z_min);
         }
     }
+
     // Update a point along a line segment and return its new outcode
     updatePoint(p0, t, dx, dy, dz, z_min){
         p0.x += t * dx;
