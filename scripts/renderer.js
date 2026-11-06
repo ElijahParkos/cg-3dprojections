@@ -26,6 +26,25 @@ class Renderer {
     //
     updateTransforms(time, delta_time) {
         // TODO: update any transformations needed for animation
+        for(const model of this.scene.models) {
+            if(!('animation' in model)) return;
+            let rotationMatrix = new Matrix(4,4);
+            let theta = model.animation.rps * 360 * (time / 1000); // total degrees since start
+            if(model.animation.axis === 'X') {
+                CG.mat4x4RotateX(rotationMatrix, theta);
+            } else if(model.animation.axis === 'Y') {
+                CG.mat4x4RotateY(rotationMatrix, theta);
+            } else {
+                CG.mat4x4RotateZ(rotationMatrix, theta);
+            }
+            console.log(model);
+            let translateOrigin = new Matrix(4,4);
+            CG.mat4x4Translate(translateOrigin, -model.center.x, -model.center.y, -model.center.z);
+            let translateBack = new Matrix(4,4);
+            CG.mat4x4Translate(translateBack, model.center.x, model.center.y, model.center.z);
+
+            model.matrix = Matrix.multiply([translateBack, rotationMatrix, translateOrigin]);
+        }
     }
 
     //
@@ -160,7 +179,7 @@ class Renderer {
             const transform = CG.mat4x4Perspective(view.prp, view.srp, view.vup, view.clip);
             if (model.type === 'generic') {
                 for(const vertex of model.vertices) {
-                    model.cannonical_vertices.push(Matrix.multiply([transform, vertex]));
+                    model.cannonical_vertices.push(Matrix.multiply([transform, model.matrix, vertex]));
                 }
                 edges = model.edges;
             }
@@ -179,7 +198,7 @@ class Renderer {
                     CG.Vector4(model.center.x + half_length, model.center.y + half_width, model.center.z + half_height, 1)
                 ]; 
                 for(const vertex of vertices) {
-                    model.cannonical_vertices.push(Matrix.multiply([transform, vertex]));
+                    model.cannonical_vertices.push(Matrix.multiply([transform, model.matrix, vertex]));
                 }
                 edges = [
                     [0, 2, 3, 1, 0], 
@@ -200,10 +219,10 @@ class Renderer {
                     let y = model.center.y;
                     let z = model.center.z + model.radius * Math.sin(i * angel_radians);
                     let vertex = CG.Vector4(x, y, z, 1);
-                    model.cannonical_vertices.push(Matrix.multiply([transform, vertex]));
+                    model.cannonical_vertices.push(Matrix.multiply([transform, model.matrix, vertex]));
                 }
                 let apex = CG.Vector4(model.center.x, model.center.y + model.height, model.center.z, 1); // add height to whichever is the apex
-                model.cannonical_vertices.push(Matrix.multiply([transform, apex]));
+                model.cannonical_vertices.push(Matrix.multiply([transform, model.matrix, apex]));
                 for (let i = 0; i < model.sides; i++) {
                     edges.push([i, (i + 1) % model.sides]); // bottom circle
                     edges.push([i, model.sides]); // lines from base to apex (apex lives at index model.sides)
@@ -217,9 +236,9 @@ class Renderer {
                     let y = model.center.y - model.height / 2;
                     let z = model.center.z + model.radius * Math.sin(i * angel_radians);
                     let vertex = CG.Vector4(x, y, z, 1);
-                    model.cannonical_vertices.push(Matrix.multiply([transform, vertex])); // bottom circle
+                    model.cannonical_vertices.push(Matrix.multiply([transform, model.matrix, vertex])); // bottom circle
                     let vertex2 = CG.Vector4(x, y + model.height, z, 1);
-                    model.cannonical_vertices.push(Matrix.multiply([transform, vertex2])); //top circle
+                    model.cannonical_vertices.push(Matrix.multiply([transform, model.matrix, vertex2])); //top circle
                 }
                 for (let i = 0; i < model.sides; i++) {
                     edges.push([i * 2, (i * 2 + 2) % (model.sides * 2)]); // bottom circle
@@ -239,7 +258,7 @@ class Renderer {
                         let y = model.center.y + model.radius * Math.cos(phi);
                         let z = model.center.z + model.radius * Math.sin(phi) * Math.sin(theta);
                         let vertex = CG.Vector4(x, y, z, 1);
-                        model.cannonical_vertices.push(Matrix.multiply([transform, vertex]));
+                        model.cannonical_vertices.push(Matrix.multiply([transform, model.matrix, vertex]));
                     }
                 }
                 for (let i = 0; i < stacks; i++) {
@@ -410,6 +429,7 @@ class Renderer {
             if (model.type === 'generic') {
                 model.vertices = [];
                 model.edges = JSON.parse(JSON.stringify(scene.models[i].edges));
+                model.center = scene.models[i].center ? CG.Vector4(scene.models[i].center[0], scene.models[i].center[1], scene.models[i].center[2]) : CG.Vector4(0, 0, 0, 1);
                 for (let j = 0; j < scene.models[i].vertices.length; j++) {
                     model.vertices.push(CG.Vector4(scene.models[i].vertices[j][0],
                                                    scene.models[i].vertices[j][1],

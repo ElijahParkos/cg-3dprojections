@@ -65,7 +65,11 @@ let initial_scene = {
             center: [10, 25, -14],
             width: 8,
             height: 8,
-            depth: 8
+            depth: 8,
+            animation: {
+                axis: 'Y',
+                rps: 0.1
+            }
         },
         {
             type: "cone",
