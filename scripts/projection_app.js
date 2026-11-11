@@ -218,7 +218,7 @@ let initial_scene = {
             center: [9, -6, 3],
             radius: 3,
             height: 1,
-            sides: 6,
+            sides: 12,
             animation: {
                 axis: "y",
                 rps: 1
