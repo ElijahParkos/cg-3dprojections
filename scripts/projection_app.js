@@ -183,9 +183,9 @@ let initial_scene = {
         {
             type: "cone",
             center: [9, 6, 3],
-            radius: 1.6,
+            radius: 3,
             height: 1,
-            sides: 6,
+            sides: 12,
             animation: {
                 axis: "y",
                 rps: 1
@@ -216,7 +216,7 @@ let initial_scene = {
         {
             type: "cone",
             center: [9, -6, 3],
-            radius: 1.6,
+            radius: 3,
             height: 1,
             sides: 6,
             animation: {
@@ -249,9 +249,9 @@ let initial_scene = {
         {
             type: "cone",
             center: [-9, 6, 3],
-            radius: 1.6,
+            radius: 3,
             height: 1,
-            sides: 6,
+            sides: 12,
             animation: {
                 axis: "y",
                 rps: 1
@@ -282,9 +282,9 @@ let initial_scene = {
         {
             type: "cone",
             center: [-9, -6, 3],
-            radius: 1.6,
+            radius: 3,
             height: 1,
-            sides: 6,
+            sides: 12,
             animation: {
                 axis: "y",
                 rps: 1
