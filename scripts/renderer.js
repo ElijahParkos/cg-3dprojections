@@ -27,12 +27,12 @@ class Renderer {
     updateTransforms(time, delta_time) {
         // TODO: update any transformations needed for animation
         for(const model of this.scene.models) {
-            if(!('animation' in model)) return;
+            if(!('animation' in model)) continue;
             let rotationMatrix = new Matrix(4,4);
             let theta = model.animation.rps * 360 * (time / 1000); // total degrees since start
-            if(model.animation.axis === 'X') {
+            if(model.animation.axis === 'x') {
                 CG.mat4x4RotateX(rotationMatrix, theta);
-            } else if(model.animation.axis === 'Y') {
+            } else if(model.animation.axis === 'y') {
                 CG.mat4x4RotateY(rotationMatrix, theta);
             } else {
                 CG.mat4x4RotateZ(rotationMatrix, theta);
@@ -183,31 +183,25 @@ class Renderer {
                 }
                 edges = model.edges;
             }
-            if  (model.type === 'cube') {
-                const half_length = model.depth / 2;
-                const half_width = model.width / 2;
-                const half_height = model.height / 2;
+            if (model.type === 'cube') {
+                const hx = model.width  / 2;   
+                const hy = model.height / 2;  
+                const hz = model.depth  / 2;  
+                const c = model.center;
                 const vertices = [
-                    CG.Vector4(model.center.x - half_length, model.center.y - half_width, model.center.z - half_height, 1),
-                    CG.Vector4(model.center.x + half_length, model.center.y - half_width, model.center.z - half_height, 1),
-                    CG.Vector4(model.center.x - half_length, model.center.y + half_width, model.center.z - half_height, 1),
-                    CG.Vector4(model.center.x + half_length, model.center.y + half_width, model.center.z - half_height, 1),
-                    CG.Vector4(model.center.x - half_length, model.center.y - half_width, model.center.z + half_height, 1),
-                    CG.Vector4(model.center.x + half_length, model.center.y - half_width, model.center.z + half_height, 1),
-                    CG.Vector4(model.center.x - half_length, model.center.y + half_width, model.center.z + half_height, 1),
-                    CG.Vector4(model.center.x + half_length, model.center.y + half_width, model.center.z + half_height, 1)
-                ]; 
-                for(const vertex of vertices) {
+                    CG.Vector4(c.x - hx, c.y - hy, c.z - hz, 1),
+                    CG.Vector4(c.x + hx, c.y - hy, c.z - hz, 1),
+                    CG.Vector4(c.x - hx, c.y + hy, c.z - hz, 1),
+                    CG.Vector4(c.x + hx, c.y + hy, c.z - hz, 1),
+                    CG.Vector4(c.x - hx, c.y - hy, c.z + hz, 1),
+                    CG.Vector4(c.x + hx, c.y - hy, c.z + hz, 1),
+                    CG.Vector4(c.x - hx, c.y + hy, c.z + hz, 1),
+                    CG.Vector4(c.x + hx, c.y + hy, c.z + hz, 1)
+                ];
+                for (const vertex of vertices) {
                     model.cannonical_vertices.push(Matrix.multiply([transform, model.matrix, vertex]));
                 }
-                edges = [
-                    [0, 2, 3, 1, 0], 
-                    [4, 6, 7, 5, 4], 
-                    [0, 4],
-                    [1, 5],
-                    [2, 6],
-                    [3, 7]
-                ];
+                edges = [[0, 2, 3, 1, 0], [4, 6, 7, 5, 4], [0, 4], [1, 5], [2, 6], [3, 7]];
             }
             if (model.type === 'cone') {
                 let angel_degrees = 360 / model.sides;

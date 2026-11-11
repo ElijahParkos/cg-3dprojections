@@ -54,67 +54,241 @@ let S = 20;
 
 let initial_scene = {
     view: {
-        prp: [44, 20, -16],
-        srp: [20, 20, -40],
-        vup: [0, 1, 0],
-        clip: [-19, 5, -10, 8, 12, 100]
+        prp: [34, 46, 23],
+        srp: [1, 0, 4],
+        vup: [0, 0, 1],
+        clip: [-3.6, 3.6, -2.7, 2.7, 10, 150]
     },
     models: [
         {
             type: "cube",
-            center: [10, 25, -14],
-            width: 8,
+            center: [0, 0, 4.5],
+            width: 30,
+            height: 11,
+            depth: 4
+        },
+        {
+            type: "cube",
+            center: [15.75, 0, 3.8],
+            width: 1.5,
+            height: 11.5,
+            depth: 1.6
+        },
+        {
+            type: "cube",
+            center: [-15.75, 0, 3.8],
+            width: 1.5,
+            height: 11.5,
+            depth: 1.6
+        },
+        {
+            type: "generic",
+            vertices: [
+                [6, -4.8, 6.5],
+                [2, -4.8, 11],
+                [-7, -4.8, 11],
+                [-10, -4.8, 6.5],
+                [6, 4.8, 6.5],
+                [2, 4.8, 11],
+                [-7, 4.8, 11],
+                [-10, 4.8, 6.5],
+                [-2.5, -4.8, 6.5],
+                [-2.5, -4.8, 11],
+                [-2.5, 4.8, 6.5],
+                [-2.5, 4.8, 11]
+            ],
+            edges: [
+                [0, 1, 2, 3, 0],
+                [4, 5, 6, 7, 4],
+                [0, 4],
+                [1, 5],
+                [2, 6],
+                [3, 7],
+                [8, 9],
+                [10, 11]
+            ]
+        },
+        {
+            type: "cube",
+            center: [15.2, 3.6, 5.4],
+            width: 0.6,
+            height: 2,
+            depth: 1
+        },
+        {
+            type: "cube",
+            center: [15.2, -3.6, 5.4],
+            width: 0.6,
+            height: 2,
+            depth: 1
+        },
+        {
+            type: "cube",
+            center: [-15.2, 3.6, 5.4],
+            width: 0.6,
+            height: 2,
+            depth: 1
+        },
+        {
+            type: "cube",
+            center: [-15.2, -3.6, 5.4],
+            width: 0.6,
+            height: 2,
+            depth: 1
+        },
+        {
+            type: "cylinder",
+            center: [9, 0, 3],
+            radius: 0.4,
             height: 8,
-            depth: 8,
+            sides: 4,
             animation: {
-                axis: 'Y',
-                rps: 0.1
+                axis: "y",
+                rps: 1
+            }
+        },
+        {
+            type: "cylinder",
+            center: [-9, 0, 3],
+            radius: 0.4,
+            height: 8,
+            sides: 4,
+            animation: {
+                axis: "y",
+                rps: 1
+            }
+        },
+        {
+            type: "cylinder",
+            center: [9, 5, 3],
+            radius: 3,
+            height: 2,
+            sides: 12,
+            animation: {
+                axis: "y",
+                rps: 1
+            }
+        },
+        {
+            type: "sphere",
+            center: [9, 5, 3],
+            radius: 0.9,
+            slices: 6,
+            stacks: 3,
+            animation: {
+                axis: "y",
+                rps: 1
             }
         },
         {
             type: "cone",
-            center: [20, 4, -60],
-            radius: 4,
-            height: 8,
-            sides: 20
+            center: [9, 6, 3],
+            radius: 1.6,
+            height: 1,
+            sides: 6,
+            animation: {
+                axis: "y",
+                rps: 1
+            }
         },
         {
             type: "cylinder",
-            center: [20, 30, -20],
-            radius: 1.5,
-            height: 5,
-            sides: 12
+            center: [9, -5, 3],
+            radius: 3,
+            height: 2,
+            sides: 12,
+            animation: {
+                axis: "y",
+                rps: 1
+            }
         },
         {
             type: "sphere",
-            center: [12, 30, -40],
-            radius: 8,
-            slices: 12,
-            stacks: 12
+            center: [9, -5, 3],
+            radius: 0.9,
+            slices: 6,
+            stacks: 3,
+            animation: {
+                axis: "y",
+                rps: 1
+            }
         },
         {
-            type: 'generic',
-            vertices: [
-                [ 0.0,  0.0, -30.0],
-                [20.0,  0.0, -30.0],
-                [20.0, 12.0, -30.0],
-                [10.0, 20.0, -30.0],
-                [ 0.0, 12.0, -30.0],
-                [ 0.0,  0.0, -60.0],
-                [20.0,  0.0, -60.0],
-                [20.0, 12.0, -60.0],
-                [10.0, 20.0, -60.0],
-                [ 0.0, 12.0, -60.0]
-            ].map(v => [v[0], v[1], v[2] + S]),
-            edges: [
-                [0, 1, 2, 3, 4, 0],
-                [5, 6, 7, 8, 9, 5],
-                [0, 5],
-                [1, 6],
-                [2, 7],
-                [3, 8],
-                [4, 9]
-            ]
+            type: "cone",
+            center: [9, -6, 3],
+            radius: 1.6,
+            height: 1,
+            sides: 6,
+            animation: {
+                axis: "y",
+                rps: 1
+            }
+        },
+        {
+            type: "cylinder",
+            center: [-9, 5, 3],
+            radius: 3,
+            height: 2,
+            sides: 12,
+            animation: {
+                axis: "y",
+                rps: 1
+            }
+        },
+        {
+            type: "sphere",
+            center: [-9, 5, 3],
+            radius: 0.9,
+            slices: 6,
+            stacks: 3,
+            animation: {
+                axis: "y",
+                rps: 1
+            }
+        },
+        {
+            type: "cone",
+            center: [-9, 6, 3],
+            radius: 1.6,
+            height: 1,
+            sides: 6,
+            animation: {
+                axis: "y",
+                rps: 1
+            }
+        },
+        {
+            type: "cylinder",
+            center: [-9, -5, 3],
+            radius: 3,
+            height: 2,
+            sides: 12,
+            animation: {
+                axis: "y",
+                rps: 1
+            }
+        },
+        {
+            type: "sphere",
+            center: [-9, -5, 3],
+            radius: 0.9,
+            slices: 6,
+            stacks: 3,
+            animation: {
+                axis: "y",
+                rps: 1
+            }
+        },
+        {
+            type: "cone",
+            center: [-9, -6, 3],
+            radius: 1.6,
+            height: 1,
+            sides: 6,
+            animation: {
+                axis: "y",
+                rps: 1
+            }
         }
     ]
 };
